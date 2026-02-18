@@ -4,9 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard de Llamadas - Ecom</title>
+    <title>Ecom Call Dashboard - Confirmación de Pedidos COD</title>
+    <meta name="description" content="Dashboard de confirmación automática de pedidos contra reembolso con IA">
     <link rel="icon" type="image/png" href="./favicon.png">
     <link rel="stylesheet" href="./style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
@@ -14,119 +16,568 @@
     <!-- Login Gate -->
     <div id="login-gate" class="login-overlay">
         <div class="login-card">
-            <img src="./logo.png" alt="Ecom" class="brand-logo">
-            <h2>Acceso al Dashboard</h2>
-            <p>Introduce la contraseña para continuar</p>
+            <div class="login-logo-area">
+                <div class="login-icon">🛒</div>
+                <h2>Ecom Call Dashboard</h2>
+                <p>Confirmación automática de pedidos COD</p>
+            </div>
             <form id="login-form">
                 <input type="password" id="password-input" placeholder="Contraseña" required>
-                <button type="submit" class="refresh-btn" style="width: 100%;">Entrar</button>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Entrar</button>
             </form>
             <p id="auth-error" class="auth-error" style="display: none;">Contraseña incorrecta</p>
         </div>
     </div>
 
     <!-- Main Dashboard -->
-    <div class="container" id="main-content">
-        <header>
-            <h1>
-                <img src="./logo.png" alt="Ecom" class="header-logo">
-                Ecom Dashboard
-            </h1>
-            <button class="refresh-btn" id="refresh-btn">🔄 Actualizar</button>
-        </header>
+    <div class="app-shell" id="main-content">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <span class="logo-icon">🛒</span>
+                    <span class="logo-text">EcomCall</span>
+                </div>
+                <button class="sidebar-toggle" id="sidebar-toggle">☰</button>
+            </div>
 
-        <div class="filter-section">
-            <div class="filter-group">
-                <label for="date-from">Desde</label>
-                <input type="date" id="date-from" class="filter-input">
-            </div>
-            <div class="filter-group">
-                <label for="date-to">Hasta</label>
-                <input type="date" id="date-to" class="filter-input">
-            </div>
-        </div>
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-view="dashboard">
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-label">Dashboard</span>
+                </a>
+                <a href="#" class="nav-item" data-view="orders">
+                    <span class="nav-icon">📦</span>
+                    <span class="nav-label">Pedidos</span>
+                    <span class="nav-badge" id="pending-badge">0</span>
+                </a>
+                <a href="#" class="nav-item" data-view="calls">
+                    <span class="nav-icon">📞</span>
+                    <span class="nav-label">Llamadas</span>
+                </a>
+                <a href="#" class="nav-item" data-view="stores">
+                    <span class="nav-icon">🏪</span>
+                    <span class="nav-label">Tiendas</span>
+                </a>
+                <a href="#" class="nav-item" data-view="settings">
+                    <span class="nav-icon">⚙️</span>
+                    <span class="nav-label">Configuración</span>
+                </a>
+            </nav>
 
-        <div class="chart-card">
-            <div class="section-title">📈 Volumen de Llamadas</div>
-            <div class="chart-container">
-                <canvas id="call-chart"></canvas>
+            <div class="sidebar-footer">
+                <button class="btn btn-ghost btn-sm" id="logout-btn">🚪 Cerrar sesión</button>
             </div>
-        </div>
+        </aside>
 
-        <div class="stats-grid" id="stats">
-            <div class="stat-card">
-                <div class="stat-value" id="total-calls">-</div>
-                <div class="stat-label">Total Llamadas</div>
-            </div>
-            <div class="stat-card success">
-                <div class="stat-value" id="success-rate">-</div>
-                <div class="stat-label">Tasa de Éxito</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="avg-duration">-</div>
-                <div class="stat-label">Duración Media</div>
-            </div>
-        </div>
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <header class="top-bar">
+                <div class="top-bar-left">
+                    <button class="mobile-menu-btn" id="mobile-menu-btn">☰</button>
+                    <h1 id="page-title">Dashboard</h1>
+                </div>
+                <div class="top-bar-right">
+                    <div class="live-indicator" id="live-indicator">
+                        <span class="live-dot"></span>
+                        <span>En vivo</span>
+                    </div>
+                    <button class="btn btn-secondary btn-sm" id="refresh-btn">🔄 Actualizar</button>
+                </div>
+            </header>
 
-        <div class="section-title">📋 Historial de Llamadas</div>
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Vapi Call ID</th>
-                        <th>Empresa</th>
-                        <th>Teléfono</th>
-                        <th>Fecha</th>
-                        <th>Resultado</th>
-                        <th>Evaluación</th>
-                        <th>Duración</th>
-                        <th>Notas</th>
-                        <th>Detalle</th>
-                    </tr>
-                </thead>
-                <tbody id="call-table">
-                    <tr>
-                        <td colspan="9" class="loading">Cargando datos...</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+            <!-- ========== DASHBOARD VIEW ========== -->
+            <section class="view active" id="view-dashboard">
+                <!-- Stats Row -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">📦</div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="stat-total-orders">0</div>
+                            <div class="stat-label">Pedidos Hoy</div>
+                        </div>
+                    </div>
+                    <div class="stat-card accent-green">
+                        <div class="stat-icon">✅</div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="stat-confirmed">0</div>
+                            <div class="stat-label">Confirmados</div>
+                        </div>
+                    </div>
+                    <div class="stat-card accent-red">
+                        <div class="stat-icon">❌</div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="stat-rejected">0</div>
+                            <div class="stat-label">Rechazados</div>
+                        </div>
+                    </div>
+                    <div class="stat-card accent-orange">
+                        <div class="stat-icon">⏳</div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="stat-pending">0</div>
+                            <div class="stat-label">Pendientes</div>
+                        </div>
+                    </div>
+                    <div class="stat-card accent-purple">
+                        <div class="stat-icon">📍</div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="stat-address-changed">0</div>
+                            <div class="stat-label">Dirección Cambiada</div>
+                        </div>
+                    </div>
+                    <div class="stat-card accent-blue">
+                        <div class="stat-icon">📈</div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="stat-confirm-rate">0%</div>
+                            <div class="stat-label">Tasa Confirmación</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Row -->
+                <div class="charts-row">
+                    <div class="chart-card">
+                        <div class="card-header">
+                            <h3>📈 Pedidos por Día</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="orders-chart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="card-header">
+                            <h3>🎯 Estado de Pedidos</h3>
+                        </div>
+                        <div class="chart-container chart-container-sm">
+                            <canvas id="status-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Orders -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>📋 Últimos Pedidos</h3>
+                        <a href="#" class="btn btn-ghost btn-sm" data-navigate="orders">Ver todos →</a>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Pedido</th>
+                                    <th>Cliente</th>
+                                    <th>Tienda</th>
+                                    <th>Producto</th>
+                                    <th>Importe</th>
+                                    <th>Estado</th>
+                                    <th>Llamada</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recent-orders-table">
+                                <tr>
+                                    <td colspan="8" class="loading-row">Cargando pedidos...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========== ORDERS VIEW ========== -->
+            <section class="view" id="view-orders">
+                <!-- Filters -->
+                <div class="filters-bar">
+                    <div class="filter-group">
+                        <label>Estado</label>
+                        <select id="filter-status" class="filter-input">
+                            <option value="">Todos</option>
+                            <option value="pendiente">⏳ Pendiente</option>
+                            <option value="llamada_programada">📅 Llamada Programada</option>
+                            <option value="en_llamada">📞 En Llamada</option>
+                            <option value="confirmado">✅ Confirmado</option>
+                            <option value="rechazado">❌ Rechazado</option>
+                            <option value="direccion_cambiada">📍 Dirección Cambiada</option>
+                            <option value="no_contesta">🔇 No Contesta</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Tienda</label>
+                        <select id="filter-store" class="filter-input">
+                            <option value="">Todas</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Desde</label>
+                        <input type="date" id="filter-date-from" class="filter-input">
+                    </div>
+                    <div class="filter-group">
+                        <label>Hasta</label>
+                        <input type="date" id="filter-date-to" class="filter-input">
+                    </div>
+                    <div class="filter-group">
+                        <label>Buscar</label>
+                        <input type="text" id="filter-search" class="filter-input"
+                            placeholder="Nombre, teléfono, pedido...">
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>📦 Todos los Pedidos</h3>
+                        <span class="results-count" id="orders-count">0 pedidos</span>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Pedido</th>
+                                    <th>Fecha</th>
+                                    <th>Cliente</th>
+                                    <th>Teléfono</th>
+                                    <th>Tienda</th>
+                                    <th>Producto</th>
+                                    <th>Importe</th>
+                                    <th>Estado</th>
+                                    <th>Llamada</th>
+                                    <th>Intentos</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="orders-table">
+                                <tr>
+                                    <td colspan="11" class="loading-row">Cargando pedidos...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========== CALLS VIEW ========== -->
+            <section class="view" id="view-calls">
+                <div class="filters-bar">
+                    <div class="filter-group">
+                        <label>Resultado</label>
+                        <select id="filter-call-result" class="filter-input">
+                            <option value="">Todos</option>
+                            <option value="confirmado">Confirmado</option>
+                            <option value="rechazado">Rechazado</option>
+                            <option value="no_contesta">No Contesta</option>
+                            <option value="buzon">Buzón de Voz</option>
+                            <option value="error">Error</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Desde</label>
+                        <input type="date" id="filter-call-from" class="filter-input">
+                    </div>
+                    <div class="filter-group">
+                        <label>Hasta</label>
+                        <input type="date" id="filter-call-to" class="filter-input">
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>📞 Historial de Llamadas</h3>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID Llamada</th>
+                                    <th>Pedido</th>
+                                    <th>Cliente</th>
+                                    <th>Teléfono</th>
+                                    <th>Fecha/Hora</th>
+                                    <th>Duración</th>
+                                    <th>Resultado</th>
+                                    <th>Coste</th>
+                                    <th>Detalle</th>
+                                </tr>
+                            </thead>
+                            <tbody id="calls-table">
+                                <tr>
+                                    <td colspan="9" class="loading-row">Cargando llamadas...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========== STORES VIEW ========== -->
+            <section class="view" id="view-stores">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>🏪 Tiendas Shopify</h3>
+                        <button class="btn btn-primary btn-sm" id="add-store-btn">+ Añadir Tienda</button>
+                    </div>
+                    <div class="stores-grid" id="stores-grid">
+                        <!-- Store cards rendered dynamically -->
+                    </div>
+                    <div class="empty-state" id="no-stores" style="display:none;">
+                        <div class="empty-icon">🏪</div>
+                        <h3>No hay tiendas configuradas</h3>
+                        <p>Añade tu primera tienda Shopify para empezar a recibir pedidos</p>
+                        <button class="btn btn-primary" id="add-store-btn-empty">+ Añadir Tienda</button>
+                    </div>
+                </div>
+
+                <!-- Webhook Info -->
+                <div class="card" id="webhook-info-card" style="display:none;">
+                    <div class="card-header">
+                        <h3>🔗 Configuración del Webhook</h3>
+                    </div>
+                    <div class="webhook-info">
+                        <p>Configura este webhook en tu tienda Shopify para recibir pedidos automáticamente:</p>
+                        <div class="code-block">
+                            <div class="code-label">URL del Webhook</div>
+                            <code id="webhook-url">https://tu-n8n-instance.com/webhook/shopify-orders</code>
+                            <button class="btn btn-ghost btn-sm copy-btn" id="copy-webhook">📋 Copiar</button>
+                        </div>
+                        <div class="code-block">
+                            <div class="code-label">Evento</div>
+                            <code>orders/create</code>
+                        </div>
+                        <div class="code-block">
+                            <div class="code-label">Formato</div>
+                            <code>JSON</code>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========== SETTINGS VIEW ========== -->
+            <section class="view" id="view-settings">
+                <div class="settings-grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>🤖 Configuración de IA (Vapi)</h3>
+                        </div>
+                        <div class="form-group">
+                            <label>Vapi API Key</label>
+                            <input type="password" id="setting-vapi-key" class="form-input"
+                                placeholder="Tu API Key de Vapi">
+                        </div>
+                        <div class="form-group">
+                            <label>ID del Asistente Vapi</label>
+                            <input type="text" id="setting-vapi-assistant" class="form-input"
+                                placeholder="ID del asistente configurado">
+                        </div>
+                        <div class="form-group">
+                            <label>Número de Teléfono (Origen)</label>
+                            <input type="text" id="setting-phone-number" class="form-input" placeholder="+34...">
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>⏰ Horarios de Llamada</h3>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Hora inicio</label>
+                                <input type="time" id="setting-hour-start" class="form-input" value="09:00">
+                            </div>
+                            <div class="form-group">
+                                <label>Hora fin</label>
+                                <input type="time" id="setting-hour-end" class="form-input" value="21:00">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Espera tras pedido (minutos)</label>
+                            <input type="number" id="setting-wait-minutes" class="form-input" value="15" min="0"
+                                max="120">
+                        </div>
+                        <div class="form-group">
+                            <label>Máximo de reintentos</label>
+                            <input type="number" id="setting-max-retries" class="form-input" value="3" min="1" max="10">
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>🔗 NocoDB</h3>
+                        </div>
+                        <div class="form-group">
+                            <label>URL Base NocoDB</label>
+                            <input type="text" id="setting-nocodb-url" class="form-input"
+                                placeholder="https://nocodb.example.com/api/v2/tables">
+                        </div>
+                        <div class="form-group">
+                            <label>Table ID (Pedidos)</label>
+                            <input type="text" id="setting-nocodb-table" class="form-input"
+                                placeholder="ID de la tabla de pedidos">
+                        </div>
+                        <div class="form-group">
+                            <label>XC Token</label>
+                            <input type="password" id="setting-nocodb-token" class="form-input"
+                                placeholder="Token de autenticación">
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>💬 Pre-notificación</h3>
+                        </div>
+                        <div class="form-group">
+                            <label>Canal de Notificación</label>
+                            <select id="setting-notification-channel" class="form-input">
+                                <option value="none">Desactivado</option>
+                                <option value="whatsapp">WhatsApp</option>
+                                <option value="sms">SMS</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Mensaje de Pre-aviso</label>
+                            <textarea id="setting-prenotify-msg" class="form-textarea" rows="3"
+                                placeholder="Hola {nombre}, vas a recibir una llamada para confirmar tu pedido #{pedido}...">Hola {nombre}, en breves recibirás una llamada para confirmar los datos de tu pedido #{pedido}. Por favor, atiende la llamada. Gracias.</textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="settings-actions">
+                    <button class="btn btn-primary" id="save-settings-btn">💾 Guardar Configuración</button>
+                </div>
+            </section>
+        </main>
     </div>
 
-    <!-- Modal para Detalle -->
-    <div class="modal" id="detail-modal">
-        <div class="modal-content">
-            <button class="close-modal" id="close-modal">×</button>
+    <!-- ========== ORDER DETAIL MODAL ========== -->
+    <div class="modal" id="order-modal">
+        <div class="modal-content modal-lg">
+            <button class="close-modal" id="close-order-modal">×</button>
             <div class="modal-header">
-                <h2 id="modal-title">Detalle de la Llamada</h2>
-                <p id="modal-subtitle" style="color: var(--text-secondary); font-size: 14px; margin-top: 4px;"></p>
+                <h2 id="order-modal-title">Detalle del Pedido</h2>
+                <div class="modal-subtitle" id="order-modal-subtitle"></div>
             </div>
 
-            <div class="section-title">📝 Transscripción</div>
-            <div class="transcript-text" id="modal-transcript">No hay transcripción disponible para esta llamada.</div>
+            <div class="order-detail-grid">
+                <!-- Order Info -->
+                <div class="detail-section">
+                    <h4>📦 Información del Pedido</h4>
+                    <div class="detail-row">
+                        <span class="detail-label">Nº Pedido:</span>
+                        <span class="detail-value" id="od-order-number">-</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Tienda:</span>
+                        <span class="detail-value" id="od-store">-</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Producto:</span>
+                        <span class="detail-value" id="od-product">-</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Importe:</span>
+                        <span class="detail-value" id="od-amount">-</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Fecha pedido:</span>
+                        <span class="detail-value" id="od-date">-</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Estado:</span>
+                        <span class="detail-value" id="od-status">-</span>
+                    </div>
+                </div>
 
-            <div id="recording-section" style="display: none;">
-                <div class="section-title">🔊 Grabación</div>
-                <audio id="modal-audio" class="audio-player" controls>
-                    Tu navegador no soporta el elemento de audio.
-                </audio>
-            </div>
-
-            <div id="error-section"
-                style="display: none; background: rgba(239, 68, 68, 0.1); border: 1px solid var(--danger); border-radius: 8px; padding: 16px; margin-bottom: 24px;">
-                <div class="section-title" style="color: var(--danger); margin-bottom: 8px;">❌ Error en la Llamada</div>
-                <div id="modal-error-detail" style="color: var(--text-primary); font-size: 14px; line-height: 1.5;">
+                <!-- Customer Info -->
+                <div class="detail-section">
+                    <h4>👤 Datos del Cliente</h4>
+                    <div class="detail-row">
+                        <span class="detail-label">Nombre:</span>
+                        <span class="detail-value" id="od-customer-name">-</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Teléfono:</span>
+                        <span class="detail-value" id="od-customer-phone">-</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Dirección original:</span>
+                        <span class="detail-value" id="od-address-original">-</span>
+                    </div>
+                    <div class="detail-row address-changed-row" id="od-address-changed-row" style="display:none;">
+                        <span class="detail-label">⚠️ Dirección corregida:</span>
+                        <span class="detail-value highlight-changed" id="od-address-corrected">-</span>
+                    </div>
                 </div>
             </div>
 
-            <div class="section-title">📝 Notas del Agente</div>
+            <!-- Call History for this order -->
+            <div class="detail-section">
+                <h4>📞 Historial de Llamadas</h4>
+                <div class="call-timeline" id="od-call-timeline">
+                    <div class="timeline-empty">No hay llamadas registradas aún</div>
+                </div>
+            </div>
 
-            <textarea id="modal-notes" class="notes-area"
-                placeholder="Escribe aquí tus observaciones sobre la llamada..."></textarea>
-            <button id="save-notes-btn" class="refresh-btn" style="width: 100%; margin-top: 10px;">💾 Guardar
-                Notas</button>
+            <!-- Transcript -->
+            <div class="detail-section" id="od-transcript-section" style="display:none;">
+                <h4>📝 Última Transcripción</h4>
+                <div class="transcript-text" id="od-transcript"></div>
+            </div>
+
+            <!-- Recording -->
+            <div class="detail-section" id="od-recording-section" style="display:none;">
+                <h4>🔊 Grabación</h4>
+                <audio id="od-audio" class="audio-player" controls></audio>
+            </div>
+
+            <!-- Notes -->
+            <div class="detail-section">
+                <h4>📝 Notas</h4>
+                <textarea id="od-notes" class="form-textarea" rows="3"
+                    placeholder="Añade notas sobre este pedido..."></textarea>
+                <button class="btn btn-primary btn-sm" id="save-order-notes-btn" style="margin-top: 8px;">💾 Guardar
+                    Notas</button>
+            </div>
+
+            <!-- Actions -->
+            <div class="modal-actions">
+                <button class="btn btn-success" id="od-confirm-btn">✅ Marcar Confirmado</button>
+                <button class="btn btn-danger" id="od-reject-btn">❌ Marcar Rechazado</button>
+                <button class="btn btn-secondary" id="od-retry-btn">🔁 Reintentar Llamada</button>
+            </div>
         </div>
     </div>
+
+    <!-- ========== ADD STORE MODAL ========== -->
+    <div class="modal" id="store-modal">
+        <div class="modal-content">
+            <button class="close-modal" id="close-store-modal">×</button>
+            <div class="modal-header">
+                <h2>🏪 Añadir Tienda Shopify</h2>
+            </div>
+            <form id="add-store-form">
+                <div class="form-group">
+                    <label>Nombre de la Tienda</label>
+                    <input type="text" id="store-name" class="form-input" placeholder="Mi Tienda" required>
+                </div>
+                <div class="form-group">
+                    <label>URL de Shopify</label>
+                    <input type="text" id="store-url" class="form-input" placeholder="mi-tienda.myshopify.com" required>
+                </div>
+                <div class="form-group">
+                    <label>Access Token (API)</label>
+                    <input type="password" id="store-token" class="form-input" placeholder="shpat_..." required>
+                </div>
+                <div class="form-group">
+                    <label>Identificador de pago COD</label>
+                    <input type="text" id="store-cod-id" class="form-input" placeholder="Cash on Delivery"
+                        value="Cash on Delivery">
+                    <small class="form-hint">Nombre del método de pago contra reembolso en tu Shopify</small>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 16px;">🏪 Añadir
+                    Tienda</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast notifications -->
+    <div class="toast-container" id="toast-container"></div>
 
     <script type="module" src="./main.js"></script>
 </body>

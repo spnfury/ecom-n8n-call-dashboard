@@ -6,12 +6,26 @@
             "config": {
                 "distDir": "dist"
             }
+        },
+        {
+            "src": "api/**/*.js",
+            "use": "@vercel/node"
         }
     ],
     "routes": [
         {
+            "src": "/api/(.*)",
+            "dest": "/api/$1"
+        },
+        {
             "src": "/(.*)",
             "dest": "/call-dashboard-app/$1"
+        }
+    ],
+    "crons": [
+        {
+            "path": "/api/trigger-calls",
+            "schedule": "* * * * *"
         }
     ]
 }
