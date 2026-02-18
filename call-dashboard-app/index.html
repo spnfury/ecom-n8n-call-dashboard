@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Llamadas - Ecom</title>
+    <link rel="icon" type="image/png" href="./favicon.png">
+    <link rel="stylesheet" href="./style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body class="auth-hidden">
+    <!-- Login Gate -->
+    <div id="login-gate" class="login-overlay">
+        <div class="login-card">
+            <img src="./logo.png" alt="Ecom" class="brand-logo">
+            <h2>Acceso al Dashboard</h2>
+            <p>Introduce la contraseña para continuar</p>
+            <form id="login-form">
+                <input type="password" id="password-input" placeholder="Contraseña" required>
+                <button type="submit" class="refresh-btn" style="width: 100%;">Entrar</button>
+            </form>
+            <p id="auth-error" class="auth-error" style="display: none;">Contraseña incorrecta</p>
+        </div>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div class="container" id="main-content">
+        <header>
+            <h1>
+                <img src="./logo.png" alt="Ecom" class="header-logo">
+                Ecom Dashboard
+            </h1>
+            <button class="refresh-btn" id="refresh-btn">🔄 Actualizar</button>
+        </header>
+
+        <div class="filter-section">
+            <div class="filter-group">
+                <label for="date-from">Desde</label>
+                <input type="date" id="date-from" class="filter-input">
+            </div>
+            <div class="filter-group">
+                <label for="date-to">Hasta</label>
+                <input type="date" id="date-to" class="filter-input">
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <div class="section-title">📈 Volumen de Llamadas</div>
+            <div class="chart-container">
+                <canvas id="call-chart"></canvas>
+            </div>
+        </div>
+
+        <div class="stats-grid" id="stats">
+            <div class="stat-card">
+                <div class="stat-value" id="total-calls">-</div>
+                <div class="stat-label">Total Llamadas</div>
+            </div>
+            <div class="stat-card success">
+                <div class="stat-value" id="success-rate">-</div>
+                <div class="stat-label">Tasa de Éxito</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="avg-duration">-</div>
+                <div class="stat-label">Duración Media</div>
+            </div>
+        </div>
+
+        <div class="section-title">📋 Historial de Llamadas</div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Vapi Call ID</th>
+                        <th>Empresa</th>
+                        <th>Teléfono</th>
+                        <th>Fecha</th>
+                        <th>Resultado</th>
+                        <th>Evaluación</th>
+                        <th>Duración</th>
+                        <th>Notas</th>
+                        <th>Detalle</th>
+                    </tr>
+                </thead>
+                <tbody id="call-table">
+                    <tr>
+                        <td colspan="9" class="loading">Cargando datos...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal para Detalle -->
+    <div class="modal" id="detail-modal">
+        <div class="modal-content">
+            <button class="close-modal" id="close-modal">×</button>
+            <div class="modal-header">
+                <h2 id="modal-title">Detalle de la Llamada</h2>
+                <p id="modal-subtitle" style="color: var(--text-secondary); font-size: 14px; margin-top: 4px;"></p>
+            </div>
+
+            <div class="section-title">📝 Transscripción</div>
+            <div class="transcript-text" id="modal-transcript">No hay transcripción disponible para esta llamada.</div>
+
+            <div id="recording-section" style="display: none;">
+                <div class="section-title">🔊 Grabación</div>
+                <audio id="modal-audio" class="audio-player" controls>
+                    Tu navegador no soporta el elemento de audio.
+                </audio>
+            </div>
+
+            <div id="error-section"
+                style="display: none; background: rgba(239, 68, 68, 0.1); border: 1px solid var(--danger); border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+                <div class="section-title" style="color: var(--danger); margin-bottom: 8px;">❌ Error en la Llamada</div>
+                <div id="modal-error-detail" style="color: var(--text-primary); font-size: 14px; line-height: 1.5;">
+                </div>
+            </div>
+
+            <div class="section-title">📝 Notas del Agente</div>
+
+            <textarea id="modal-notes" class="notes-area"
+                placeholder="Escribe aquí tus observaciones sobre la llamada..."></textarea>
+            <button id="save-notes-btn" class="refresh-btn" style="width: 100%; margin-top: 10px;">💾 Guardar
+                Notas</button>
+        </div>
+    </div>
+
+    <script type="module" src="./main.js"></script>
+</body>
+
+</html>
