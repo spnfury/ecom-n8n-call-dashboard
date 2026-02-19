@@ -159,19 +159,12 @@ body::before {
     margin-bottom: 32px;
 }
 
-.login-icon {
-    font-size: 48px;
-    margin-bottom: 16px;
-}
-
-.login-card h2 {
-    font-size: 24px;
-    font-weight: 700;
-    margin-bottom: 8px;
-    background: linear-gradient(135deg, var(--text-primary), var(--accent-light));
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
+.login-logo-img {
+    width: 220px;
+    height: auto;
+    margin: 0 auto;
+    display: block;
+    filter: drop-shadow(0 4px 20px rgba(99, 102, 241, 0.3));
 }
 
 .login-card p {
@@ -393,17 +386,10 @@ select:focus,
     gap: 10px;
 }
 
-.logo-icon {
-    font-size: 24px;
-}
-
-.logo-text {
-    font-size: 18px;
-    font-weight: 800;
-    background: linear-gradient(135deg, var(--accent-light), var(--purple));
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
+.sidebar-logo-img {
+    height: 36px;
+    width: auto;
+    filter: drop-shadow(0 2px 8px rgba(99, 102, 241, 0.3));
 }
 
 .sidebar-toggle {
