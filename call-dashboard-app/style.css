@@ -1543,3 +1543,28 @@ tbody tr {
 .sidebar-overlay.active {
     display: block;
 }
+
+/* Shopify One-Click Connection */
+.one-click-connection {
+    background: rgba(124, 92, 252, 0.05);
+    border-radius: 12px;
+    padding: 24px;
+    border: 1px solid rgba(124, 92, 252, 0.1);
+    margin-bottom: 24px;
+}
+
+.one-click-connection h4 {
+    color: var(--accent-light);
+    margin: 0 0 8px 0;
+    font-size: 16px;
+}
+
+.one-click-connection p {
+    margin: 0 0 16px 0;
+    line-height: 1.4;
+}
+
+.highlight-changed {
+    color: var(--accent-light);
+    font-weight: 600;
+}

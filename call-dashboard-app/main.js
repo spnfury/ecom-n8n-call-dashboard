@@ -636,6 +636,14 @@ function showDashboard() {
 function checkAuth() {
     if (localStorage.getItem('ecom_dashboard_auth') === 'true') {
         showDashboard();
+
+        // Handle Shopify connection success redirect
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('connected') === 'success') {
+            showToast('¡Tienda conectada con éxito!', 'success');
+            // Clean up URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
     }
 }
 
@@ -743,6 +751,27 @@ document.getElementById('store-modal')?.addEventListener('click', (e) => {
     if (e.target.id === 'store-modal') {
         document.getElementById('store-modal').style.display = 'none';
     }
+});
+
+// One-click Shopify connection
+document.getElementById('one-click-btn')?.addEventListener('click', () => {
+    const shop = document.getElementById('shopify-shop-url').value.trim();
+    if (!shop) {
+        showToast('Introduce tu dominio .myshopify.com', 'error');
+        return;
+    }
+
+    // Simple validation
+    if (!shop.includes('.myshopify.com')) {
+        showToast('El dominio debe terminar en .myshopify.com', 'error');
+        return;
+    }
+
+    const host = window.location.hostname === 'localhost'
+        ? 'http://localhost:3000'
+        : window.location.origin;
+
+    window.location.href = `${host}/api/shopify/auth?shop=${shop}`;
 });
 
 // Add store

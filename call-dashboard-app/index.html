@@ -550,17 +550,34 @@
                 <h2>🏪 Añadir Tienda Shopify</h2>
             </div>
             <form id="add-store-form">
+                <div class="one-click-connection"
+                    style="margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid var(--border-color);">
+                    <h4 style="margin-bottom: 12px;">🚀 Conexión en un clic (Recomendado)</h4>
+                    <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">
+                        Simplemente introduce tu dominio y te conectaremos automáticamente.
+                    </p>
+                    <div class="form-group">
+                        <label>Dominio .myshopify.com</label>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="text" id="shopify-shop-url" class="form-input"
+                                placeholder="mi-tienda.myshopify.com" style="flex: 1;">
+                            <button type="button" class="btn btn-primary" id="one-click-btn">Conectar</button>
+                        </div>
+                    </div>
+                </div>
+
+                <h4 style="margin-bottom: 12px;">🛠️ Configuración Manual (Opcional)</h4>
                 <div class="form-group">
                     <label>Nombre de la Tienda</label>
-                    <input type="text" id="store-name" class="form-input" placeholder="Mi Tienda" required>
+                    <input type="text" id="store-name" class="form-input" placeholder="Mi Tienda">
                 </div>
                 <div class="form-group">
                     <label>URL de Shopify</label>
-                    <input type="text" id="store-url" class="form-input" placeholder="mi-tienda.myshopify.com" required>
+                    <input type="text" id="store-url" class="form-input" placeholder="mi-tienda.myshopify.com">
                 </div>
                 <div class="form-group">
                     <label>Access Token (API)</label>
-                    <input type="password" id="store-token" class="form-input" placeholder="shpat_..." required>
+                    <input type="password" id="store-token" class="form-input" placeholder="shpat_...">
                 </div>
                 <div class="form-group">
                     <label>Identificador de pago COD</label>
@@ -568,8 +585,8 @@
                         value="Cash on Delivery">
                     <small class="form-hint">Nombre del método de pago contra reembolso en tu Shopify</small>
                 </div>
-                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 16px;">🏪 Añadir
-                    Tienda</button>
+                <button type="submit" class="btn btn-secondary" style="width: 100%; margin-top: 16px;">🏪 Añadir
+                    manualmente</button>
             </form>
         </div>
     </div>
