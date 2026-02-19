@@ -21,11 +21,5 @@
             "src": "/(.*)",
             "dest": "/call-dashboard-app/$1"
         }
-    ],
-    "crons": [
-        {
-            "path": "/api/trigger-calls",
-            "schedule": "* * * * *"
-        }
     ]
 }
