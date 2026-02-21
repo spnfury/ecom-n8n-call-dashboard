@@ -35,7 +35,7 @@ export default async function handler(req, res) {
         const accessToken = accessTokenData.access_token;
 
         if (!accessToken) {
-            return res.status(500).send('Failed to obtain access token');
+            return res.status(500).json({ error: 'Failed to obtain access token', details: accessTokenData });
         }
 
         // 3. Get shop info to get the store name
@@ -43,6 +43,10 @@ export default async function handler(req, res) {
             headers: { 'X-Shopify-Access-Token': accessToken }
         });
         const shopInfoData = await shopInfoResponse.json();
+
+        if (!shopInfoData || !shopInfoData.shop) {
+            return res.status(500).json({ error: 'Failed to fetch shop info', details: shopInfoData });
+        }
         const storeName = shopInfoData.shop.name;
 
         // 4. Save store in Supabase (check if exists first)
@@ -54,7 +58,7 @@ export default async function handler(req, res) {
             .maybeSingle();
 
         if (selectError) {
-            console.error('Error checking existing store:', selectError);
+            return res.status(500).json({ error: 'Database check error', details: selectError });
         }
 
         let store;
@@ -65,7 +69,7 @@ export default async function handler(req, res) {
                 .eq('id', existingStore.id)
                 .select()
                 .single();
-            if (error) throw error;
+            if (error) return res.status(500).json({ error: 'Database update error', details: error });
             store = data;
         } else {
             const { data, error } = await supabase
@@ -73,7 +77,7 @@ export default async function handler(req, res) {
                 .insert({ name: storeName, url: shop, access_token: accessToken, is_active: true })
                 .select()
                 .single();
-            if (error) throw error;
+            if (error) return res.status(500).json({ error: 'Database insert error', details: error });
             store = data;
         }
 
@@ -81,7 +85,7 @@ export default async function handler(req, res) {
         const appUrl = (process.env.APP_URL || '').trim();
         const webhookUrl = `${appUrl}/api/shopify-webhook`;
 
-        await fetch(`https://${shop}/admin/api/2024-01/webhooks.json`, {
+        const webhookResponse = await fetch(`https://${shop}/admin/api/2024-01/webhooks.json`, {
             method: 'POST',
             headers: {
                 'X-Shopify-Access-Token': accessToken,
@@ -96,11 +100,18 @@ export default async function handler(req, res) {
             })
         });
 
+        const webhookData = await webhookResponse.json();
+
+        // Don't fail the whole auth if webhook fails, just log it (often fails if already registered)
+        if (!webhookResponse.ok) {
+            console.error('Webhook registration failed:', webhookData);
+        }
+
         // 6. Redirect back to dashboard with success
         res.redirect('/?connected=success');
 
     } catch (err) {
         console.error('Shopify OAuth Error:', err);
-        res.status(500).send('Internal Server Error during Shopify connection');
+        res.status(500).json({ error: 'Internal Server Error during Shopify connection', details: err.message, stack: err.stack });
     }
 }
