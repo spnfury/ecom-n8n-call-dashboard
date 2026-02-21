@@ -28,6 +28,7 @@ let currentView = 'dashboard';
 let ordersChartInstance = null;
 let statusChartInstance = null;
 let triggerInterval = null;
+let calendarWeekOffset = 0;
 
 // ---- CONFIG ----
 const LOCAL_PASSWORD = 'ecom2024';
@@ -112,11 +113,14 @@ function switchView(viewName) {
     const titles = {
         dashboard: 'Dashboard',
         orders: 'Pedidos',
+        calendar: 'Calendario',
         calls: 'Llamadas',
         stores: 'Tiendas',
         settings: 'Configuración'
     };
     document.getElementById('page-title').textContent = titles[viewName] || viewName;
+
+    if (viewName === 'calendar') renderCalendar();
 
     document.getElementById('sidebar').classList.remove('open');
     document.querySelector('.sidebar-overlay')?.classList.remove('active');
@@ -394,6 +398,171 @@ function renderCallsTable(orders) {
     `).join('');
 }
 
+// ---- CALENDAR VIEW ----
+function getCalendarStatus(status) {
+    // Simplified 3-state: no-confirmado, confirmado, rechazado
+    if (['confirmado', 'direccion_cambiada'].includes(status)) return 'confirmado';
+    if (status === 'rechazado') return 'rechazado';
+    return 'no-confirmado'; // pendiente, llamada_programada, en_llamada, no_contesta
+}
+
+function getCalendarStatusLabel(calStatus) {
+    if (calStatus === 'confirmado') return '✅ Confirmado';
+    if (calStatus === 'rechazado') return '❌ No lo quiere';
+    return '🔵 No Confirmado';
+}
+
+function getWeekDates(offset = 0) {
+    const now = new Date();
+    const day = now.getDay();
+    // Monday = start of week (getDay: 0=Sun, 1=Mon...)
+    const mondayOffset = day === 0 ? -6 : 1 - day;
+    const monday = new Date(now);
+    monday.setDate(now.getDate() + mondayOffset + (offset * 7));
+    monday.setHours(0, 0, 0, 0);
+
+    const days = [];
+    for (let i = 0; i < 7; i++) {
+        const d = new Date(monday);
+        d.setDate(monday.getDate() + i);
+        days.push(d);
+    }
+    return days;
+}
+
+function renderCalendar() {
+    const weekDays = getWeekDates(calendarWeekOffset);
+    const dayNames = ['LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB', 'DOM'];
+    const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Update week label
+    const startDate = weekDays[0];
+    const endDate = weekDays[6];
+    const label = `${startDate.getDate()} ${monthNames[startDate.getMonth()]} — ${endDate.getDate()} ${monthNames[endDate.getMonth()]} ${endDate.getFullYear()}`;
+    document.getElementById('cal-week-label').textContent = label;
+
+    // Group orders by date (using call_scheduled_at)
+    const ordersByDate = {};
+    allOrders.forEach(order => {
+        const schedDate = order.call_scheduled_at ? new Date(order.call_scheduled_at) : new Date(order.created_at);
+        const dateKey = `${schedDate.getFullYear()}-${String(schedDate.getMonth() + 1).padStart(2, '0')}-${String(schedDate.getDate()).padStart(2, '0')}`;
+        if (!ordersByDate[dateKey]) ordersByDate[dateKey] = [];
+        ordersByDate[dateKey].push(order);
+    });
+
+    // Render desktop grid
+    const grid = document.getElementById('calendar-grid');
+    grid.innerHTML = weekDays.map((day, idx) => {
+        const dateKey = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`;
+        const isToday = day.getTime() === today.getTime();
+        const dayOrders = (ordersByDate[dateKey] || []).sort((a, b) => {
+            const tA = new Date(a.call_scheduled_at || a.created_at);
+            const tB = new Date(b.call_scheduled_at || b.created_at);
+            return tA - tB;
+        });
+
+        const ordersHtml = dayOrders.length > 0
+            ? dayOrders.map(o => {
+                const calStatus = getCalendarStatus(o.status);
+                const schedTime = o.call_scheduled_at
+                    ? new Date(o.call_scheduled_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
+                    : '--:--';
+                const dotClass = calStatus === 'confirmado' ? 'dot-confirmed' : (calStatus === 'rechazado' ? 'dot-rejected' : 'dot-pending');
+                const cardClass = calStatus === 'confirmado' ? 'cal-status-confirmado' : (calStatus === 'rechazado' ? 'cal-status-rechazado' : 'cal-status-no-confirmado');
+                return `
+                    <div class="calendar-order-card ${cardClass}" data-order-id="${o.id}" data-source="calendar">
+                        <div class="cal-order-time"><span class="cal-status-dot ${dotClass}"></span> ${schedTime}</div>
+                        <div class="cal-order-name">${o.customer_name || 'Sin nombre'}</div>
+                        <div class="cal-order-product">${o.product || ''}</div>
+                        <div class="cal-order-amount">${o.amount || 0}€</div>
+                    </div>
+                `;
+            }).join('')
+            : '<div class="calendar-day-empty">Sin llamadas</div>';
+
+        return `
+            <div class="calendar-day ${isToday ? 'is-today' : ''}">
+                <div class="calendar-day-header">
+                    <div class="calendar-day-name">${dayNames[idx]}</div>
+                    <div class="calendar-day-number">${day.getDate()}</div>
+                    <div class="calendar-day-count">${dayOrders.length} pedido${dayOrders.length !== 1 ? 's' : ''}</div>
+                </div>
+                <div class="calendar-day-body">
+                    ${ordersHtml}
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    // Render mobile list view
+    const listView = document.getElementById('calendar-list-view');
+    listView.innerHTML = weekDays.map((day, idx) => {
+        const dateKey = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`;
+        const isToday = day.getTime() === today.getTime();
+        const dayOrders = (ordersByDate[dateKey] || []).sort((a, b) => {
+            const tA = new Date(a.call_scheduled_at || a.created_at);
+            const tB = new Date(b.call_scheduled_at || b.created_at);
+            return tA - tB;
+        });
+
+        if (dayOrders.length === 0 && !isToday) return ''; // Skip empty days on mobile
+
+        const ordersHtml = dayOrders.length > 0
+            ? dayOrders.map(o => {
+                const calStatus = getCalendarStatus(o.status);
+                const schedTime = o.call_scheduled_at
+                    ? new Date(o.call_scheduled_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
+                    : '--:--';
+                const dotClass = calStatus === 'confirmado' ? 'dot-confirmed' : (calStatus === 'rechazado' ? 'dot-rejected' : 'dot-pending');
+                const cardClass = calStatus === 'confirmado' ? 'cal-status-confirmado' : (calStatus === 'rechazado' ? 'cal-status-rechazado' : 'cal-status-no-confirmado');
+                return `
+                    <div class="calendar-order-card ${cardClass}" data-order-id="${o.id}" data-source="calendar">
+                        <div class="cal-order-time"><span class="cal-status-dot ${dotClass}"></span> ${schedTime}</div>
+                        <div class="cal-order-name">${o.customer_name || 'Sin nombre'}</div>
+                        <div class="cal-order-product">${o.product || ''}</div>
+                        <div class="cal-order-amount">${o.amount || 0}€</div>
+                    </div>
+                `;
+            }).join('')
+            : '<div class="calendar-day-empty">Sin llamadas programadas</div>';
+
+        return `
+            <div class="cal-list-day">
+                <div class="cal-list-day-header">
+                    <span>${isToday ? '📍 HOY - ' : ''}${dayNames[idx]} ${day.getDate()} ${monthNames[day.getMonth()]}</span>
+                    <span class="cal-day-badge">${dayOrders.length}</span>
+                </div>
+                <div class="cal-list-orders">
+                    ${ordersHtml}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+async function syncShopifyOrders() {
+    const btn = document.getElementById('sync-orders-btn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Sincronizando...';
+
+    try {
+        const data = await apiFetch('shopify-sync', { method: 'POST' });
+        if (data.synced > 0) {
+            showToast(`${data.synced} pedido(s) sincronizado(s)`, 'success');
+            await loadData();
+        } else {
+            showToast('No hay pedidos nuevos para sincronizar', 'info');
+        }
+    } catch (err) {
+        showToast('Error al sincronizar: ' + err.message, 'error');
+    }
+
+    btn.disabled = false;
+    btn.textContent = '🔄 Sincronizar Pedidos';
+}
+
 // ---- STORES VIEW ----
 function renderStores() {
     const stores = allStores;
@@ -580,6 +749,54 @@ async function saveSettings() {
     btn.textContent = '💾 Guardar Configuración';
 }
 
+// ---- TEST CALL ----
+async function makeTestCall() {
+    const btn = document.getElementById('test-call-btn');
+    const resultDiv = document.getElementById('test-call-result');
+    const phone = document.getElementById('test-phone').value.trim();
+
+    if (!phone) {
+        showToast('Introduce un número de teléfono para la prueba', 'error');
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = '⏳ Iniciando llamada...';
+    resultDiv.style.display = 'block';
+    resultDiv.className = 'test-call-result test-call-loading';
+    resultDiv.innerHTML = '📡 Conectando con VAPI...';
+
+    try {
+        const data = await apiFetch('test-call', {
+            method: 'POST',
+            body: JSON.stringify({
+                phone,
+                customer_name: document.getElementById('test-customer-name').value.trim(),
+                order_number: document.getElementById('test-order-number').value.trim(),
+                product: document.getElementById('test-product').value.trim(),
+                amount: document.getElementById('test-amount').value.trim(),
+                address: document.getElementById('test-address').value.trim(),
+                store_name: document.getElementById('test-store-name').value.trim()
+            })
+        });
+
+        resultDiv.className = 'test-call-result test-call-success';
+        resultDiv.innerHTML = `✅ <strong>Llamada iniciada</strong><br>
+            <span style="font-size: 12px; opacity: 0.8;">Call ID: <code>${data.call_id || '-'}</code> • Estado: ${data.status || 'queued'}</span><br>
+            <span style="font-size: 12px; opacity: 0.8;">Recibirás la llamada en unos segundos...</span>`;
+
+        showToast('Llamada de prueba iniciada', 'success');
+
+    } catch (err) {
+        resultDiv.className = 'test-call-result test-call-error';
+        resultDiv.innerHTML = `❌ <strong>Error</strong>: ${err.message}`;
+        showToast('Error en la llamada de prueba', 'error');
+    }
+
+    btn.disabled = false;
+    btn.textContent = '📞 Hacer Llamada de Prueba';
+}
+
 // ---- TOAST ----
 function showToast(message, type = 'info') {
     const container = document.getElementById('toast-container');
@@ -612,6 +829,7 @@ async function loadData() {
         renderOrdersTable(orders);
         renderCallsTable(orders);
         renderStores();
+        if (currentView === 'calendar') renderCalendar();
 
     } catch (err) {
         console.error('Error loading data:', err);
@@ -819,6 +1037,9 @@ document.getElementById('add-store-form')?.addEventListener('submit', async (e) 
 // Settings
 document.getElementById('save-settings-btn')?.addEventListener('click', saveSettings);
 
+// Test call
+document.getElementById('test-call-btn')?.addEventListener('click', makeTestCall);
+
 // Filters
 document.getElementById('filter-status')?.addEventListener('change', applyOrderFilters);
 document.getElementById('filter-store')?.addEventListener('change', applyOrderFilters);
@@ -876,6 +1097,33 @@ document.getElementById('copy-webhook')?.addEventListener('click', () => {
     navigator.clipboard.writeText(url).then(() => {
         showToast('URL copiada al portapapeles', 'success');
     });
+});
+
+// Calendar controls
+document.getElementById('cal-prev-week')?.addEventListener('click', () => {
+    calendarWeekOffset--;
+    renderCalendar();
+});
+
+document.getElementById('cal-next-week')?.addEventListener('click', () => {
+    calendarWeekOffset++;
+    renderCalendar();
+});
+
+document.getElementById('cal-today')?.addEventListener('click', () => {
+    calendarWeekOffset = 0;
+    renderCalendar();
+});
+
+document.getElementById('sync-orders-btn')?.addEventListener('click', syncShopifyOrders);
+
+// Calendar order card clicks
+document.addEventListener('click', (e) => {
+    const card = e.target.closest('.calendar-order-card');
+    if (card && card.dataset.orderId) {
+        const order = allOrders.find(o => o.id === card.dataset.orderId);
+        if (order) openOrderDetail(order);
+    }
 });
 
 // Keyboard

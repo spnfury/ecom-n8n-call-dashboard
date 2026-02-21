@@ -49,6 +49,10 @@
                     <span class="nav-label">Pedidos</span>
                     <span class="nav-badge" id="pending-badge">0</span>
                 </a>
+                <a href="#" class="nav-item" data-view="calendar">
+                    <span class="nav-icon">📅</span>
+                    <span class="nav-label">Calendario</span>
+                </a>
                 <a href="#" class="nav-item" data-view="calls">
                     <span class="nav-icon">📞</span>
                     <span class="nav-label">Llamadas</span>
@@ -253,6 +257,40 @@
                 </div>
             </section>
 
+            <!-- ========== CALENDAR VIEW ========== -->
+            <section class="view" id="view-calendar">
+                <div class="calendar-toolbar">
+                    <div class="calendar-nav">
+                        <button class="btn btn-ghost btn-sm" id="cal-prev-week">← Anterior</button>
+                        <button class="btn btn-secondary btn-sm" id="cal-today">Hoy</button>
+                        <button class="btn btn-ghost btn-sm" id="cal-next-week">Siguiente →</button>
+                    </div>
+                    <h3 class="calendar-week-label" id="cal-week-label">Semana del 21 Feb 2026</h3>
+                    <div class="calendar-actions">
+                        <button class="btn btn-primary btn-sm" id="sync-orders-btn">🔄 Sincronizar Pedidos</button>
+                    </div>
+                </div>
+
+                <!-- Calendar Legend -->
+                <div class="calendar-legend">
+                    <span class="legend-item"><span class="legend-dot cal-no-confirmado"></span> No Confirmado</span>
+                    <span class="legend-item"><span class="legend-dot cal-confirmado"></span> Confirmado</span>
+                    <span class="legend-item"><span class="legend-dot cal-rechazado"></span> No lo quiere</span>
+                </div>
+
+                <!-- Calendar Grid -->
+                <div class="calendar-container">
+                    <div class="calendar-grid" id="calendar-grid">
+                        <!-- Rendered dynamically -->
+                    </div>
+                </div>
+
+                <!-- Mobile: List fallback -->
+                <div class="calendar-list-view" id="calendar-list-view" style="display:none;">
+                    <!-- Rendered dynamically for mobile -->
+                </div>
+            </section>
+
             <!-- ========== CALLS VIEW ========== -->
             <section class="view" id="view-calls">
                 <div class="filters-bar">
@@ -436,6 +474,56 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Test Call Section -->
+                <div class="card test-call-card">
+                    <div class="card-header">
+                        <h3>🧪 Llamada de Prueba</h3>
+                        <span class="test-call-badge">TEST</span>
+                    </div>
+                    <p class="test-call-desc">Lanza una llamada real con datos ficticios para validar tu script de VAPI.
+                        No se creará ningún registro en la base de datos.</p>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>📞 Teléfono destino *</label>
+                            <input type="tel" id="test-phone" class="form-input" placeholder="+34600000000">
+                        </div>
+                        <div class="form-group">
+                            <label>👤 Nombre cliente</label>
+                            <input type="text" id="test-customer-name" class="form-input" value="Cliente de Prueba">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>📦 Nº Pedido</label>
+                            <input type="text" id="test-order-number" class="form-input" value="#TEST-001">
+                        </div>
+                        <div class="form-group">
+                            <label>🛍️ Producto</label>
+                            <input type="text" id="test-product" class="form-input" value="Crema Anti-Aging Premium">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>💰 Importe (€)</label>
+                            <input type="text" id="test-amount" class="form-input" value="49.99">
+                        </div>
+                        <div class="form-group">
+                            <label>🏪 Tienda</label>
+                            <input type="text" id="test-store-name" class="form-input" value="Mi Tienda Test">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>📍 Dirección</label>
+                        <input type="text" id="test-address" class="form-input"
+                            value="Calle Mayor 15, 3ºB, 28001 Madrid">
+                    </div>
+                    <div class="test-call-actions">
+                        <button class="btn btn-primary" id="test-call-btn">📞 Hacer Llamada de Prueba</button>
+                    </div>
+                    <div id="test-call-result" class="test-call-result" style="display:none;"></div>
+                </div>
+
                 <div class="settings-actions">
                     <button class="btn btn-primary" id="save-settings-btn">💾 Guardar Configuración</button>
                 </div>

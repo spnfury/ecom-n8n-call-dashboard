@@ -127,3 +127,64 @@ Estas variables se pasan desde el workflow de n8n al asistente Vapi en cada llam
 | `importe` | Precio total | "49.99" |
 | `direccion` | Dirección de entrega | "Calle Mayor 15, Madrid" |
 | `tienda` | Nombre de la tienda | "Mi Tienda" |
+
+---
+
+## Tool Function - Actualizar Pedido
+
+Configura esta función como **Tool** en el asistente Vapi para que pueda actualizar el estado del pedido durante la conversación:
+
+### Configuración en Vapi Dashboard
+
+1. Ve a tu asistente → **Tools** → **Add Tool**
+2. Tipo: **Function**
+3. Configura así:
+
+```json
+{
+    "type": "function",
+    "function": {
+        "name": "actualizar_pedido",
+        "description": "Actualiza el estado del pedido basándose en la respuesta del cliente durante la llamada. Llama a esta función cuando el cliente confirme o rechace el pedido.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "resultado": {
+                    "type": "string",
+                    "enum": ["confirmado", "rechazado"],
+                    "description": "confirmado si el cliente acepta el pedido, rechazado si lo cancela o no lo quiere"
+                },
+                "nueva_direccion": {
+                    "type": "string",
+                    "description": "Nueva dirección de entrega si el cliente la cambia. Dejar vacío si no cambia la dirección."
+                }
+            },
+            "required": ["resultado"]
+        }
+    },
+    "server": {
+        "url": "https://customerfy-r.vercel.app/api/vapi-tool"
+    }
+}
+```
+
+### Cuándo se llama la función
+
+| Situación | resultado | nueva_direccion |
+|-----------|-----------|-----------------|
+| Cliente confirma todo | `"confirmado"` | _(vacío)_ |
+| Cliente confirma pero cambia dirección | `"confirmado"` | `"Nueva Calle 123, Ciudad"` |
+| Cliente cancela/rechaza | `"rechazado"` | _(vacío)_ |
+
+### Instrucciones adicionales para el System Prompt
+
+Añade esto al final del System Prompt del asistente:
+
+```
+## ACTUALIZACIÓN DEL PEDIDO
+- Cuando el cliente CONFIRME el pedido, usa la función actualizar_pedido con resultado="confirmado"
+- Si el cliente da una NUEVA DIRECCIÓN, incluye nueva_direccion con la dirección completa
+- Cuando el cliente RECHACE o CANCELE el pedido, usa actualizar_pedido con resultado="rechazado"
+- SIEMPRE llama a la función antes de despedirte, para que el pedido quede actualizado
+```
+

@@ -8,7 +8,7 @@ export default async function handler(req, res) {
 
     try {
         if (req.method === 'GET') {
-            const { status, store_id, from, to, search, limit } = req.query;
+            const { status, store_id, from, to, search, limit, scheduled_from, scheduled_to } = req.query;
 
             let query = supabase
                 .from('ecom_orders')
@@ -20,6 +20,10 @@ export default async function handler(req, res) {
             if (store_id) query = query.eq('store_id', store_id);
             if (from) query = query.gte('created_at', from);
             if (to) query = query.lte('created_at', to + 'T23:59:59.999Z');
+
+            // Calendar view filters by call_scheduled_at
+            if (scheduled_from) query = query.gte('call_scheduled_at', scheduled_from);
+            if (scheduled_to) query = query.lte('call_scheduled_at', scheduled_to);
             if (search) {
                 query = query.or(
                     `customer_name.ilike.%${search}%,customer_phone.ilike.%${search}%,order_number.ilike.%${search}%,product.ilike.%${search}%`
