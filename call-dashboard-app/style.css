@@ -477,6 +477,15 @@ select:focus,
     border-top: 1px solid var(--border);
 }
 
+.deploy-version {
+    margin-top: 8px;
+    font-size: 10px;
+    color: var(--text-muted);
+    opacity: 0.6;
+    text-align: center;
+    letter-spacing: 0.02em;
+}
+
 /* Main Content */
 .main-content {
     flex: 1;

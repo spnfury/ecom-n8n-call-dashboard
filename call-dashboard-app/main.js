@@ -33,6 +33,18 @@ let calendarWeekOffset = 0;
 // ---- CONFIG ----
 const LOCAL_PASSWORD = 'ecom2024';
 
+// ---- DEPLOY VERSION ----
+try {
+    const buildDate = typeof __BUILD_DATE__ !== 'undefined' ? __BUILD_DATE__ : null;
+    const el = document.getElementById('deploy-version');
+    if (el && buildDate) {
+        const d = new Date(buildDate);
+        el.textContent = `Deploy: ${d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' })} ${d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`;
+    } else if (el) {
+        el.textContent = 'Dev local';
+    }
+} catch (e) { /* ignore */ }
+
 // ---- DATA FETCHING ----
 async function fetchOrders(filters = {}) {
     try {
@@ -992,7 +1004,7 @@ document.getElementById('one-click-btn')?.addEventListener('click', () => {
         ? 'http://localhost:3000'
         : window.location.origin;
 
-    window.location.href = `${host}/api/shopify/auth?shop=${encodeURIComponent(shop)}`;
+    window.location.href = `${host}/api/shopify?action=auth&shop=${encodeURIComponent(shop)}`;
 });
 
 // Add store

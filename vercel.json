@@ -14,14 +14,6 @@
     ],
     "routes": [
         {
-            "src": "/api/shopify/auth",
-            "dest": "/api/shopify/auth.js"
-        },
-        {
-            "src": "/api/shopify/callback",
-            "dest": "/api/shopify/callback.js"
-        },
-        {
             "src": "/api/(.*)",
             "dest": "/api/$1.js"
         },
