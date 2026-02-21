@@ -755,11 +755,14 @@ document.getElementById('store-modal')?.addEventListener('click', (e) => {
 
 // One-click Shopify connection
 document.getElementById('one-click-btn')?.addEventListener('click', () => {
-    const shop = document.getElementById('shopify-shop-url').value.trim();
+    let shop = document.getElementById('shopify-shop-url').value.trim();
     if (!shop) {
         showToast('Introduce tu dominio .myshopify.com', 'error');
         return;
     }
+
+    // Clean the domain (remove https://, trailing slashes)
+    shop = shop.replace(/^https?:\/\//, '').replace(/\/+$/, '').trim();
 
     // Simple validation
     if (!shop.includes('.myshopify.com')) {
@@ -771,7 +774,7 @@ document.getElementById('one-click-btn')?.addEventListener('click', () => {
         ? 'http://localhost:3000'
         : window.location.origin;
 
-    window.location.href = `${host}/api/shopify/auth?shop=${shop}`;
+    window.location.href = `${host}/api/shopify/auth?shop=${encodeURIComponent(shop)}`;
 });
 
 // Add store

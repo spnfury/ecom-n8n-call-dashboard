@@ -9,7 +9,7 @@ export default async function handler(req, res) {
     }
 
     // 1. Verify HMAC
-    const clientSecret = process.env.SHOPIFY_CLIENT_SECRET;
+    const clientSecret = (process.env.SHOPIFY_CLIENT_SECRET || '').trim();
     const map = Object.assign({}, req.query);
     delete map['hmac'];
     const message = Object.keys(map).sort().map(key => `${key}=${map[key]}`).join('&');
@@ -25,7 +25,7 @@ export default async function handler(req, res) {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                client_id: process.env.SHOPIFY_CLIENT_ID,
+                client_id: (process.env.SHOPIFY_CLIENT_ID || '').trim(),
                 client_secret: clientSecret,
                 code
             })
@@ -45,22 +45,40 @@ export default async function handler(req, res) {
         const shopInfoData = await shopInfoResponse.json();
         const storeName = shopInfoData.shop.name;
 
-        // 4. Save/Update store in Supabase
-        const { data: store, error: upsertError } = await supabase
+        // 4. Save store in Supabase (check if exists first)
+        const { data: existingStore, error: selectError } = await supabase
             .from('ecom_stores')
-            .upsert({
-                name: storeName,
-                url: shop,
-                access_token: accessToken,
-                is_active: true
-            }, { onConflict: 'url' })
-            .select()
-            .single();
+            .select('id')
+            .ilike('url', `%${shop}%`)
+            .limit(1)
+            .maybeSingle();
 
-        if (upsertError) throw upsertError;
+        if (selectError) {
+            console.error('Error checking existing store:', selectError);
+        }
+
+        let store;
+        if (existingStore) {
+            const { data, error } = await supabase
+                .from('ecom_stores')
+                .update({ access_token: accessToken, is_active: true, name: storeName })
+                .eq('id', existingStore.id)
+                .select()
+                .single();
+            if (error) throw error;
+            store = data;
+        } else {
+            const { data, error } = await supabase
+                .from('ecom_stores')
+                .insert({ name: storeName, url: shop, access_token: accessToken, is_active: true })
+                .select()
+                .single();
+            if (error) throw error;
+            store = data;
+        }
 
         // 5. Register Webhook (orders/create)
-        const appUrl = process.env.APP_URL;
+        const appUrl = (process.env.APP_URL || '').trim();
         const webhookUrl = `${appUrl}/api/shopify-webhook`;
 
         await fetch(`https://${shop}/admin/api/2024-01/webhooks.json`, {
