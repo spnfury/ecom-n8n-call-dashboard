@@ -26,13 +26,14 @@ export default async function handler(req, res) {
         const assistantId = settingsMap.vapi_assistant_id;
         const phoneId = settingsMap.vapi_phone_id;
 
-        if (!vapiKey || !assistantId) {
-            return res.status(400).json({ error: 'Vapi no está configurado. Configura la API Key y el ID del Asistente en Configuración.' });
+        if (!vapiKey || !assistantId || !phoneId) {
+            return res.status(400).json({ error: 'Vapi no está configurado. Configura la API Key, el ID del Asistente y el Phone Number ID en Configuración.' });
         }
 
         // Build VAPI payload with test data
         const vapiPayload = {
             assistantId: assistantId,
+            phoneNumberId: phoneId,
             customer: {
                 number: phone
             },
@@ -47,10 +48,6 @@ export default async function handler(req, res) {
                 }
             }
         };
-
-        if (phoneId) {
-            vapiPayload.phoneNumberId = phoneId;
-        }
 
         // Make the VAPI call
         const vapiRes = await fetch('https://api.vapi.ai/call/phone', {

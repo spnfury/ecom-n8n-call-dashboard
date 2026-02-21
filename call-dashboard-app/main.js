@@ -726,6 +726,7 @@ async function loadSettings() {
     const settings = await fetchSettings();
     document.getElementById('setting-vapi-key').value = settings.vapi_key || '';
     document.getElementById('setting-vapi-assistant').value = settings.vapi_assistant_id || '';
+    document.getElementById('setting-vapi-phone-id').value = settings.vapi_phone_id || '';
     document.getElementById('setting-phone-number').value = settings.phone_number || '';
     document.getElementById('setting-hour-start').value = settings.hour_start || '09:00';
     document.getElementById('setting-hour-end').value = settings.hour_end || '21:00';
@@ -744,6 +745,7 @@ async function saveSettings() {
         await saveSettingsToAPI({
             vapi_key: document.getElementById('setting-vapi-key').value,
             vapi_assistant_id: document.getElementById('setting-vapi-assistant').value,
+            vapi_phone_id: document.getElementById('setting-vapi-phone-id').value,
             phone_number: document.getElementById('setting-phone-number').value,
             hour_start: document.getElementById('setting-hour-start').value,
             hour_end: document.getElementById('setting-hour-end').value,
